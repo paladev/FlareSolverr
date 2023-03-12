@@ -99,10 +99,6 @@ def get_webdriver(proxy: dict=None) -> WebDriver:
     return driver
 
 
-
-# def find_chrome_executable():
-#     stdUC.find_chrome_executable()
-
 def get_chrome_exe_path() -> str:
     return find_chrome_executable()
 
