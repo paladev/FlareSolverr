@@ -173,7 +173,7 @@ def _cmd_sessions_create(req: V1RequestBase) -> V1ResponseBase:
     session_id = req.session or str(uuid1())
     if session_id in SESSIONS_STORAGE:
         raise Exception(f"Session {session_id} already exists.")
-    driver = utils.get_webdriver()
+    driver = utils.get_webdriver(req.proxy)
     SESSIONS_STORAGE[session_id] = driver
     return V1ResponseBase({
         "status": STATUS_OK,
@@ -212,7 +212,7 @@ def _resolve_challenge(req: V1RequestBase, method: str) -> ChallengeResolutionT:
             else:
                 raise Exception("This session does not exist. Use 'list_sessions' to see all the existing sessions.")
         else:
-            driver = utils.get_webdriver()
+            driver = utils.get_webdriver(req.proxy)
         return func_timeout(timeout, _evil_logic, (req, driver, method))
     except FunctionTimedOut:
         raise Exception(f'Error solving the challenge. Timeout after {timeout} seconds.')

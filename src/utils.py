@@ -5,7 +5,8 @@ import re
 import shutil
 
 from selenium.webdriver.chrome.webdriver import WebDriver
-import undetected_chromedriver as uc
+import seleniumwire.undetected_chromedriver as uc
+from undetected_chromedriver import find_chrome_executable
 
 FLARESOLVERR_VERSION = None
 CHROME_MAJOR_VERSION = None
@@ -15,6 +16,7 @@ PATCHED_DRIVER_PATH = None
 
 
 def get_config_log_html() -> bool:
+
     return os.environ.get('LOG_HTML', 'false').lower() == 'true'
 
 
@@ -33,7 +35,7 @@ def get_flaresolverr_version() -> str:
         return FLARESOLVERR_VERSION
 
 
-def get_webdriver() -> WebDriver:
+def get_webdriver(proxy: dict=None) -> WebDriver:
     global PATCHED_DRIVER_PATH
     logging.debug('Launching web browser...')
 
@@ -46,6 +48,15 @@ def get_webdriver() -> WebDriver:
     options.add_argument('--disable-dev-shm-usage')
     # this option removes the zygote sandbox (it seems that the resolution is a bit faster)
     options.add_argument('--no-zygote')
+    seloptions = {}
+    if proxy is not None:
+        seloptions = {
+            'proxy': {
+                'http': proxy["url"],
+                'https': proxy["url"],
+                'no_proxy': 'localhost,127.0.0.1'
+            }
+        }
 
     # note: headless mode is detected (options.headless = True)
     # we launch the browser in head-full mode with the window hidden
@@ -69,7 +80,7 @@ def get_webdriver() -> WebDriver:
 
     # downloads and patches the chromedriver
     # if we don't set driver_executable_path it downloads, patches, and deletes the driver each time
-    driver = uc.Chrome(options=options, driver_executable_path=driver_exe_path, version_main=version_main,
+    driver = uc.Chrome(options=options, seleniumwire_options=seloptions, driver_executable_path=driver_exe_path, version_main=version_main,
                        windows_headless=windows_headless)
 
     # save the patched driver to avoid re-downloads
@@ -88,8 +99,12 @@ def get_webdriver() -> WebDriver:
     return driver
 
 
+
+# def find_chrome_executable():
+#     stdUC.find_chrome_executable()
+
 def get_chrome_exe_path() -> str:
-    return uc.find_chrome_executable()
+    return find_chrome_executable()
 
 
 def get_chrome_major_version() -> str:
@@ -108,7 +123,7 @@ def get_chrome_major_version() -> str:
             # Example: '104.0.5112.79'
             complete_version = extract_version_folder()
     else:
-        chrome_path = uc.find_chrome_executable()
+        chrome_path = find_chrome_executable()
         process = os.popen(f'"{chrome_path}" --version')
         # Example 1: 'Chromium 104.0.5112.79 Arch Linux\n'
         # Example 2: 'Google Chrome 104.0.5112.79 Arch Linux\n'
